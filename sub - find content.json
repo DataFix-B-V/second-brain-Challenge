@@ -1,0 +1,161 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "OpenVINO/Qwen3-14B-int4-ov",
+          "mode": "list",
+          "cachedResultName": "OpenVINO/Qwen3-14B-int4-ov"
+        },
+        "builtInTools": {},
+        "options": {
+          "frequencyPenalty": 0,
+          "maxTokens": -1,
+          "presencePenalty": 0,
+          "temperature": 0,
+          "timeout": 60000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        432
+      ],
+      "id": "65b5d1d6-c09d-467e-8cbd-53eab715e1fc",
+      "name": "Chat",
+      "credentials": {
+        "openAiApi": {
+          "id": "WSdKlVS8bA4xz1ak",
+          "name": "Intel ARC"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an AI agent that removes filler words and unnecessary phrasing from the user's input while preserving its original meaning.\n\nInstructions:\n\n1. Rewrite the input as clearly and concisely as possible.\n2. Remove filler words, repetition, hesitation, verbal clutter, and unnecessary introductory phrases.\n3. Preserve all important facts, actions, names, dates, times, locations, quantities, conditions, and intent.\n4. Do not add new information.\n5. Do not change the meaning, tone, tense, or certainty of the input.\n6. Do not summarize away relevant details.\n7. Keep the original language of the user's input.\n8. Correct minor grammar or sentence structure only when necessary for clarity.\n9. Return only the cleaned version of the input as plain text.\n10. Do not include explanations, labels, quotation marks, Markdown, comments, or any text before or after the cleaned input.\n\n/no_think\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "28620357-cb69-4838-b0d5-46de60e9089b",
+      "name": "Determine time",
+      "retryOnFail": false,
+      "waitBetweenTries": 1,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"content\": \"Went to the zoo\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        224
+      ],
+      "id": "0c172d9f-ce72-4e58-b5cd-c70026844945",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "33178888-2476-453f-b958-044bb853378f",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\t\"output\": {\n      \"content\": \"Failed\"\n    }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        16
+      ],
+      "id": "1b51dc11-7222-4a4b-9aca-5dee9f6f6bb5",
+      "name": "Failsafe: set failed content"
+    }
+  ],
+  "connections": {
+    "Chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Determine time",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine time": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Failsafe: set failed content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Determine time",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Determine time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Start": [
+      {
+        "chatInput": "Earlier today, at roughly nine in the morning, I had a Microsoft Teams meeting with Bram about the current progress of the ConvertFlow project."
+      }
+    ]
+  },
+  "meta": {
+    "instanceId": "a2b9d003b52b079e6739b2851e504c70b231790988b40dada87c7658bfc9eb9e"
+  }
+}
