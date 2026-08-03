@@ -1,0 +1,1730 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "OpenVINO/Qwen3-14B-int4-ov",
+          "mode": "list",
+          "cachedResultName": "OpenVINO/Qwen3-14B-int4-ov"
+        },
+        "builtInTools": {},
+        "options": {
+          "frequencyPenalty": 0,
+          "maxTokens": -1,
+          "presencePenalty": 0,
+          "temperature": 0,
+          "timeout": 60000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        1072
+      ],
+      "id": "c337cfc8-652b-4e97-afd2-7cd2954ff917",
+      "name": "Chat",
+      "credentials": {
+        "openAiApi": {
+          "id": "WSdKlVS8bA4xz1ak",
+          "name": "Intel ARC"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an intent validator for a second-brain workflow.\n\nDetermine whether the latest user input describes exactly one supported action:\n\n* `create`: store one new memory;\n* `read`: retrieve or search for stored information;\n* `update`: correct, add to, or modify one existing memory.\n\nA memory may be a:\n\n* fact;\n* event;\n* note;\n* idea;\n* decision;\n* preference;\n* task;\n* reminder;\n* plan.\n\n## Create\n\nUse `create` when the user provides one new canonical memory to store.\n\nExamples:\n\n* `Person A works at Company X.`\n* `I met Person A at the store today at 10:30.`\n* `Remind me to do my laundry next week.`\n* `The ConvertFlow deadline is 15 August.`\n* `I prefer meetings in the afternoon.`\n\nConnected details describing the same memory are allowed.\n\nExample:\n\n`I went to the store at 10:30 and met Person A there.`\n\nThis is one event and is valid.\n\n## Read\n\nUse `read` when the user asks to retrieve, find, list, or answer something using stored memories.\n\nExamples:\n\n* `When did I last meet Person A?`\n* `What do I know about Company X?`\n* `Show my reminders for next week.`\n* `Which projects involve Person A?`\n* `What is the ConvertFlow deadline?`\n\nThe request must have one clear retrieval purpose.\n\n## Update\n\nUse `update` when the user corrects, adds to, removes from, or modifies one existing memory.\n\nExamples:\n\n* `No, the meeting was with Person A, not Person B.`\n* `The meeting was also with Person A.`\n* `Change the meeting time to 14:30.`\n* `The meeting was 15 minutes earlier.`\n* `Remove Person B from that event.`\n* `The project was ConvertFlow, not OmniReport.`\n\nThe update must concern one identifiable memory or the clearly referenced previous memory.\n\n## Return `valid: true` only when\n\n* exactly one supported action is present;\n* the request has one clear purpose;\n* a single memory or retrieval target can be identified;\n* the workflow can process it without major guessing;\n* multiple details belong to the same logical memory or request.\n\n## Return `valid: false` when\n\n* the input is nonsensical, impossible, or gibberish;\n* the request is unrelated to storing, reading, or updating memories;\n* multiple unrelated actions or memories are included;\n* the input would need to be split into separate operations;\n* the intended action cannot be determined;\n* the target of an update is unclear;\n* important information would need to be guessed.\n\nInvalid examples:\n\n* `Do a flip.`\n* `A cat with a hat.`\n* `asdfghjkl`\n* `Generate an image of a castle.`\n* `Send Person A an email.`\n* `Person A works at Company X and remind me to do laundry next week.`\n* `Find my meeting with Person A and change the deadline of ConvertFlow.`\n\n## Action for invalid input\n\nWhen the input is invalid, set `action` to an empty string.\n\nDo not assign `create`, `read`, or `update` when the input cannot be handled safely.\n\n## Message field\n\nThe `message` field must contain the latest user input exactly as received.\n\nPreserve every character, including:\n\n* spelling;\n* capitalisation;\n* punctuation;\n* numbers;\n* spacing;\n* line breaks.\n\nDo not correct, summarise, rewrite, translate, trim, or normalise the input.\n\n## Output\n\nReturn exactly:\n\n{\n\"action\": \"create\",\n\"valid\": true,\n\"message\": \"EXACT_LATEST_USER_INPUT\"\n}\n\nAllowed `action` values:\n\n* `create`\n* `read`\n* `update`\n* `\"\"` when invalid\n\nDo not answer or execute the request.\n\nReturn valid JSON only.\n\nDo not return Markdown, reasoning, explanations, or additional fields.\n\n/no_think"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -208,
+        688
+      ],
+      "id": "53a8fd52-b36f-4f77-a84f-c21196f61d1d",
+      "name": "Answerable validator",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8d3c4685-363c-4b7f-9d66-7dc64a895827",
+              "leftValue": "={{ $json.output.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        672
+      ],
+      "id": "7f1a6799-06e6-4485-987c-9304f405f03b",
+      "name": "If valid"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"action\": {\n      \"type\": \"string\",\n      \"enum\": [\n        \"create\",\n        \"read\",\n        \"update\",\n        \"\"\n      ]\n    },\n    \"valid\": {\n      \"type\": \"boolean\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"action\",\n    \"valid\",\n    \"message\"\n  ],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        912
+      ],
+      "id": "0b482d1b-b3b9-4a3b-8f8f-de7521e35139",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "message": "=Please approve the following point, or type the desired refined in the chat:\n\nContent: {{ $json.output.content }}\n\nContacts: {{ $json.output.contacts.join(', ') }}\n\nDate & time: {{ $json.output.datetime }}\n\nLocation: {{ $json.output.interactionType }} @ {{ $json.output.interactionDetails }}\n\nCategory & subcategory: {{ $json.output.category }} - {{ $json.output.subcategory }}\n\nReminders: {{ $json.output.reminderDatetime }}\n\nReminder actions: {{ $json.output.reminderActions }}",
+        "responseType": "approval",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        976,
+        1504
+      ],
+      "id": "5f026bb2-c11c-47f8-b19b-bade804c3077",
+      "name": "Chat3",
+      "webhookId": "a789bfa8-4ddb-48d2-85d0-6236b7b70a48"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c55ac18a-c39f-4712-b2df-ff8cb8d5eb17",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        1440
+      ],
+      "id": "7d486e60-41ab-4123-9808-3330014e0844",
+      "name": "Is approved"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1440,
+        1360
+      ],
+      "id": "027f9c19-5e1d-472f-9c39-d2a6056ceec8",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.action }}",
+                    "rightValue": "read",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0bd9e735-dbcb-4726-a156-f97d9e3a1a25"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "read"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9d38a398-0eb3-4f31-8927-2559051d29a0",
+                    "leftValue": "={{ $json.output.action }}",
+                    "rightValue": "update",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "update"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7092e5b3-c091-4428-81af-7790ca9e1c51",
+                    "leftValue": "={{ $json.output.action }}",
+                    "rightValue": "create",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "create"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        640
+      ],
+      "id": "ed10824a-1d57-4a6e-8c4f-76b0114cd6f6",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User question: {{ $json.output.message }}",
+        "options": {
+          "systemMessage": "=You are responsible for retrieving information from the user's second brain.\n\nSearch Qdrant for existing memories.\n\nUse this tool when the workflow needs to retrieve one or more memories.\n\nSearch using all available relevant details, such as:\n- content or subject;\n- datetime;\n- contacts;\n- project;\n- category and subcategory;\n- interaction type;\n- interaction details;\n- reminder datetime or action.\n\nSearch for only one logical memory at a time. Do not combine unrelated memories into one search.\n\nSearch results are candidates only. Confirm matches using the stored content and metadata. Semantic similarity alone is not sufficient.\n\nClassify the search result as:\n- zero good matches;\n- one confirmed match;\n- multiple confirmed matches;\n- multiple plausible matches.\n\nWhen there are zero good matches:\n- Clearly state that no good matching memories were found.\n- Do not present weak or unrelated candidates as matches.\n- Do not invent or infer missing information.\n\nWhen there is one or more confirmed matches:\n- Write a natural-language response describing what was found.\n- For every matched memory, include all available stored information.\n- Include the content and every metadata field that is present.\n- Metadata fields include:\n  - datetime\n  - interactionType\n  - interactionDetails\n  - project\n  - category\n  - subcategory\n  - reminderDatetime\n  - reminderActions\n  - contacts\n- Preserve values exactly as stored.\n- Omit only fields that are not present.\n- Do not summarize or omit metadata.\n- Keep each memory separate.\n\nWhen multiple plausible matches remain:\n- Do not guess.\n- Explain that multiple possible matches were found.\n- Ask the user which memory they mean.\n\nRetry handling:\n- If the user says to try again, search again using the most recent search request from the conversation.\n- Preserve the original subject and identifying details from that request.\n- Use any new clarification from the user to refine the search.\n- Do not treat “try again” as a new unrelated memory request.\n- If no previous search request is available, ask the user what memory they want to search for.\n\nGeneral rules:\n- Never invent information.\n- Never modify stored values.\n- Never merge different memories into one.\n- Return only confirmed memories unless clarification is required.\n- If no good matches exist, explicitly say so.\n\n/no_think",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        800,
+        -208
+      ],
+      "id": "710fc495-8a3b-4daf-b36b-19964e6b0ee9",
+      "name": "Read",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "OpenVINO/Qwen3-14B-int4-ov",
+          "mode": "list",
+          "cachedResultName": "OpenVINO/Qwen3-14B-int4-ov"
+        },
+        "builtInTools": {},
+        "options": {
+          "frequencyPenalty": 0,
+          "maxTokens": 300,
+          "presencePenalty": 0,
+          "temperature": 0,
+          "timeout": 600000,
+          "maxRetries": 0,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        128
+      ],
+      "id": "73a77c9c-ff15-48eb-8606-820f4552d6cf",
+      "name": "Chat5",
+      "credentials": {
+        "openAiApi": {
+          "id": "WSdKlVS8bA4xz1ak",
+          "name": "Intel ARC"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "OpenVINO/bge-base-en-v1.5-fp16-ov",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        992,
+        128
+      ],
+      "id": "9bc19b04-f96c-49f5-9eef-e584b3beeb6f",
+      "name": "Embeddings OpenAI1",
+      "customTelemetryTags": {},
+      "credentials": {
+        "openAiApi": {
+          "id": "mzCR3Gx5dXYl7Ru9",
+          "name": "Intel Arc - Embedding"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2032,
+        1408
+      ],
+      "id": "d52b7753-2809-4e21-8690-8349e3668d55",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "clashHandling": {
+            "values": {
+              "resolveClash": "preferLast"
+            }
+          },
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1776,
+        1296
+      ],
+      "id": "baadf8ae-ddff-4ed0-8c7c-41bd507f4317",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "EYw2fjYQW9gkjcLe",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/EYw2fjYQW9gkjcLe",
+          "cachedResultName": "LLM — SUB: classify message"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "output_message": "={{ $json.output.message }}"
+          },
+          "matchingColumns": [
+            "output_message"
+          ],
+          "schema": [
+            {
+              "id": "output_message",
+              "displayName": "output_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        1376
+      ],
+      "name": "Call SUB: classify message",
+      "id": "87803bf9-f163-490a-a331-e2dd5ce651cf"
+    },
+    {
+      "parameters": {
+        "model": "OpenVINO/bge-base-en-v1.5-fp16-ov",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2448,
+        1632
+      ],
+      "id": "261b4355-5fbc-4bb9-b28f-f696fe843324",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "mzCR3Gx5dXYl7Ru9",
+          "name": "Intel Arc - Embedding"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.content }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "datetime",
+                "value": "={{ $json.datetime }}"
+              },
+              {
+                "name": "interactionType",
+                "value": "={{ $json.interactionType }}"
+              },
+              {
+                "name": "interactionDetails",
+                "value": "={{ $json.interactionDetails }}"
+              },
+              {
+                "name": "project",
+                "value": "={{ $json.project }}"
+              },
+              {
+                "name": "category",
+                "value": "={{ $json.category }}"
+              },
+              {
+                "name": "subcategory",
+                "value": "={{ $json.subcategory }}"
+              },
+              {
+                "name": "reminderDatetime",
+                "value": "={{ $json.reminderDatetime }}"
+              },
+              {
+                "name": "reminderActions",
+                "value": "={{ $json.reminderActions }}"
+              },
+              {
+                "name": "contacts",
+                "value": "={{ $json.contacts }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        2560,
+        1632
+      ],
+      "id": "a219c642-7cc3-4298-8da8-cf3b9a88a3b9",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "OpenVINO/Qwen3-14B-int4-ov",
+          "mode": "list",
+          "cachedResultName": "OpenVINO/Qwen3-14B-int4-ov"
+        },
+        "builtInTools": {},
+        "options": {
+          "frequencyPenalty": 0,
+          "maxTokens": 300,
+          "presencePenalty": 0,
+          "temperature": 0,
+          "timeout": 600000,
+          "maxRetries": 0,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        960
+      ],
+      "id": "4ffde21a-b933-4d82-a4ca-e2368f9ffcb2",
+      "name": "Chat8",
+      "credentials": {
+        "openAiApi": {
+          "id": "WSdKlVS8bA4xz1ak",
+          "name": "Intel ARC"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "OpenVINO/bge-base-en-v1.5-fp16-ov",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        960
+      ],
+      "id": "f55c0cd5-7bed-417f-a909-5370c1552c32",
+      "name": "Embeddings OpenAI2",
+      "customTelemetryTags": {},
+      "credentials": {
+        "openAiApi": {
+          "id": "mzCR3Gx5dXYl7Ru9",
+          "name": "Intel Arc - Embedding"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"pageContent\": {\n      \"type\": \"string\"\n    },\n    \"metadata\": {\n      \"type\": \"object\",\n      \"additionalProperties\": true\n    },\n    \"id\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"pageContent\",\n    \"metadata\",\n    \"id\"\n  ],\n  \"additionalProperties\": false\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1184,
+        816
+      ],
+      "id": "0e9e4348-5127-4f6e-aa46-db27cdce8316",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "18324ce1-c6ca-4f14-87ad-00236c99fc04",
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -432,
+        688
+      ],
+      "id": "c8d7dd54-6937-4377-9fe8-bd33c855f875",
+      "name": "Set sessionId"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7d595119-183a-4c4a-ad87-2abb9e0052ca",
+              "name": "output.datetime",
+              "value": "={{ $json.output.metadata.datetime }}",
+              "type": "string"
+            },
+            {
+              "id": "71213a14-3562-49ab-8e9f-3b0c5fd7c9f2",
+              "name": "output.interactionType",
+              "value": "={{ $json.output.metadata.interactionType }}",
+              "type": "string"
+            },
+            {
+              "id": "b3f074d0-fdd9-4149-ae05-f192a86e0ade",
+              "name": "output.interactionDetails",
+              "value": "={{ $json.output.metadata.interactionDetails }}",
+              "type": "string"
+            },
+            {
+              "id": "a2e143ea-7ff3-4843-b9ac-5ca27f1887eb",
+              "name": "output.project",
+              "value": "={{ $json.output.metadata.project }}",
+              "type": "string"
+            },
+            {
+              "id": "6bd7b21f-9ee9-46b9-b889-5aad9c9494e4",
+              "name": "output.category",
+              "value": "={{ $json.output.metadata.category }}",
+              "type": "string"
+            },
+            {
+              "id": "0ed41f80-24cb-456f-83d9-da08cc4718c6",
+              "name": "output.subcategory",
+              "value": "={{ $json.output.metadata.subcategory }}",
+              "type": "string"
+            },
+            {
+              "id": "496c9b33-129e-48c5-844c-3dbcd97fc545",
+              "name": "output.reminderDatetime",
+              "value": "={{ $json.output.metadata.reminderDatetime }}",
+              "type": "string"
+            },
+            {
+              "id": "466ba540-bd89-4196-9f11-b78ce0fce5f8",
+              "name": "output.reminderActions",
+              "value": "={{ $json.output.metadata.reminderActions }}",
+              "type": "string"
+            },
+            {
+              "id": "714708d2-00a6-41d1-a8c8-6172535b481a",
+              "name": "output.contacts",
+              "value": "={{ $json.output.metadata.contacts }}",
+              "type": "array"
+            },
+            {
+              "id": "c501fdad-54a4-4d67-95fb-a5734d107f8e",
+              "name": "output.content",
+              "value": "={{ $json.output.pageContent }}",
+              "type": "string"
+            },
+            {
+              "id": "8b941135-5d60-4631-a6a2-fb3baed5df0b",
+              "name": "id",
+              "value": "={{ $json.output.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c60c4b33-dce1-4dcf-8b25-4853f506ccbe",
+              "name": "update",
+              "value": "={{ $('Switch').first().json.output.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        608
+      ],
+      "id": "3fb6a25e-0c51-47b9-b8a7-3768b3fd8685",
+      "name": "Format Output"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=User question: {{ $json.output.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You find and update one existing second-brain memory.\n\nAvailable tool:\n- search_qdrant\n\nProcess:\n\n1. Read the update request.\n2. Identify the existing memory being referenced.\n3. Search Qdrant using the strongest available identifiers.\n4. Compare candidates using both pageContent and metadata.\n5. Select exactly one confirmed match.\n6. Apply only the changes explicitly requested by the user.\n7. Return the complete updated record.\n\nMatching priority:\n1. Exact ID, when provided.\n2. Exact datetime, contact, project, or subject.\n3. Matching pageContent and supporting metadata.\n4. Semantic similarity only as supporting evidence.\n\nRules:\n- Search for one logical memory only.\n- Never combine multiple records.\n- Never invent missing values.\n- Preserve every field not explicitly changed.\n- Do not remove existing fields unless explicitly requested.\n- Do not rewrite pageContent unless the user requested a content change.\n- Copy metadata keys and values exactly unless explicitly changed.\n- Preserve the original id.\n- Do not update Qdrant yourself.\n- Return only the complete updated Qdrant object.\n- Do not add wrapper fields.\n- Do not include reasoning, explanations, Markdown, or tool summaries.\n- If no single record can be confirmed, do not guess.\n\n/no_think",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        784,
+        608
+      ],
+      "id": "d58cb16d-f342-423d-88bd-12c02e161694",
+      "name": "Find point",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "message": "=Is this the correct item? Is yes press approve\n\nContent: {{ $json.output.content }}\n\nContacts: {{ $json.output.contacts.join(', ') }}\n\nDate & time: {{ $json.output.datetime }}\n\nLocation: {{ $json.output.interactionType }} @ {{ $json.output.interactionDetails }}\n\nCategory & subcategory: {{ $json.output.category }} - {{ $json.output.subcategory }}\n\nReminders: {{ $json.output.reminderDatetime }}\n\nReminder actions: {{ $json.output.reminderActions }}",
+        "responseType": "approval",
+        "blockUserInput": true,
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        528
+      ],
+      "id": "eb8accad-be1c-4ee6-887b-931a410408e7",
+      "name": "Chat4",
+      "webhookId": "a789bfa8-4ddb-48d2-85d0-6236b7b70a48"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c55ac18a-c39f-4712-b2df-ff8cb8d5eb17",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1664,
+        528
+      ],
+      "id": "d4384d44-c8ae-472e-bcb3-442ef13b04fd",
+      "name": "Is approved1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1888,
+        592
+      ],
+      "id": "0e17fdf4-ad3f-414d-96ad-57b832893a2f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2256,
+        608
+      ],
+      "id": "03a2f186-85db-4ba4-9915-2844f9a73223",
+      "name": "Merge4"
+    },
+    {
+      "parameters": {
+        "resource": "payload",
+        "operation": "setPayload",
+        "collectionName": {
+          "__rl": true,
+          "value": "2nd-brain-v2",
+          "mode": "list",
+          "cachedResultName": "2nd-brain-v2"
+        },
+        "payload": "={{ JSON.stringify({\n  content: $json.output.content,\n  metadata: {\n    datetime: $json.output.datetime,\n    interactionType: $json.output.interactionType,\n    interactionDetails: $json.output.interactionDetails,\n    project: $json.output.project,\n    category: $json.output.category,\n    subcategory: $json.output.subcategory,\n    reminderDatetime: $json.output.reminderDatetime,\n    reminderActions: $json.output.reminderActions,\n    contacts: $json.output.contacts\n  }\n}) }}",
+        "points": "={{ JSON.stringify([$json.id]) }}",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-qdrant.qdrant",
+      "typeVersion": 1,
+      "position": [
+        2464,
+        608
+      ],
+      "id": "73f2b363-0b1d-4e41-8789-4b74791cba50",
+      "name": "Update Point Payload",
+      "credentials": {
+        "qdrantRestApi": {
+          "id": "ZR3xVY3BaeOUbvLi",
+          "name": "Qdrant account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        1408
+      ],
+      "id": "6dc8edb5-b1de-4282-8f1c-d18e0cabd6ab",
+      "name": "Clean output"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "2nd-brain-v2",
+          "mode": "list",
+          "cachedResultName": "2nd-brain-v2"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        2448,
+        1408
+      ],
+      "id": "3dca9c7a-386e-41c2-bc45-ea18192b0bb5",
+      "name": "Store points",
+      "credentials": {
+        "qdrantApi": {
+          "id": "fEqFttM9TjP3QlZJ",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -656,
+        688
+      ],
+      "id": "3ca19d0b-8d98-498b-af04-7ffbc6fc601a",
+      "name": "Start chat",
+      "webhookId": "4230e3c6-629f-4072-9141-89f10105ee42"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ZQwgmbXoKTygvBIJ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ZQwgmbXoKTygvBIJ",
+          "cachedResultName": "LLM — SUB: Refine input"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "chatInput",
+            "output"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        1536
+      ],
+      "name": "Call SUB: Refine input",
+      "id": "daec4e8a-4535-4e20-b8c5-47fd6289ee79"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Set sessionId').first().json.sessionId }}",
+        "sessionTTL": 60,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.6,
+      "position": [
+        832,
+        816
+      ],
+      "id": "bf645c25-7cb2-46ac-961c-4a0293183ad6",
+      "name": "Chat memory",
+      "credentials": {
+        "redis": {
+          "id": "NjixDG7iEptcZ1AW",
+          "name": "Redis Arci"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "Please supply more information regarding the event you want to update!",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1888,
+        448
+      ],
+      "id": "a3177fb0-5b3a-4877-bbad-782ed71d0a43",
+      "name": "Ask for more details",
+      "webhookId": "053c8660-57e6-4509-bc75-7a47b91309d5"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ZQwgmbXoKTygvBIJ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ZQwgmbXoKTygvBIJ",
+          "cachedResultName": "LLM — SUB: Refine input"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2080,
+        672
+      ],
+      "id": "5f38ce1f-0149-4cf4-8346-ae34175caf07",
+      "name": "Refine existing point"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "message": "=Please refine your message.",
+        "options": {
+          "memoryConnection": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        864
+      ],
+      "id": "b2cb8e07-887b-45b3-b2ff-0fdf9e9de567",
+      "name": "Ask user to refine",
+      "webhookId": "d4bebce7-4ec6-4708-8cc0-a5a3ef3440e7"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output.split('/think>\\n\\n')[1] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        -304
+      ],
+      "id": "9096556d-62e7-4fd5-bf42-7be90a44af94",
+      "name": "Answer the question the user asked",
+      "webhookId": "243c58b3-2c70-4d15-aceb-920dda210426"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Set sessionId').first().json.sessionId }}",
+        "sessionTTL": 60,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.6,
+      "position": [
+        -160,
+        912
+      ],
+      "id": "8fd5862c-0a00-4a49-ba88-849a21f0eb88",
+      "name": "Chat memory1",
+      "credentials": {
+        "redis": {
+          "id": "NjixDG7iEptcZ1AW",
+          "name": "Redis Arci"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Set sessionId').first().json.sessionId }}",
+        "sessionTTL": 60,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.6,
+      "position": [
+        896,
+        16
+      ],
+      "id": "435eec83-2eb9-479d-87bf-c4ce8e81ca99",
+      "name": "Chat memory2",
+      "credentials": {
+        "redis": {
+          "id": "NjixDG7iEptcZ1AW",
+          "name": "Redis Arci"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "=Search Qdrant for the one existing memory referenced by the update request.\n\nUse the strongest available identifiers, including ID, content, datetime, contacts, project, category, interaction details, and reminder information.\n\nReturn complete candidate records with pageContent, metadata, and id.\n\nTreat results as candidates only. Confirm the match using both pageContent and metadata. Do not rely on semantic similarity alone. Do not summarize or alter returned records.",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "2nd-brain-v2",
+          "mode": "list",
+          "cachedResultName": "2nd-brain-v2"
+        },
+        "topK": 15,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        992,
+        0
+      ],
+      "id": "1b5ca6bc-e35e-4787-97f6-36624ab53811",
+      "name": "Search Qdrant",
+      "credentials": {
+        "qdrantApi": {
+          "id": "fEqFttM9TjP3QlZJ",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search Qdrant for the one existing memory referenced by the update request.\n\nUse the strongest available identifiers, including ID, content, datetime, contacts, project, category, interaction details, and reminder information.\n\nReturn complete candidate records with pageContent, metadata, and id.\n\nTreat results as candidates only. Confirm the match using both pageContent and metadata. Do not rely on semantic similarity alone. Do not summarize or alter returned records.",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "2nd-brain-v2",
+          "mode": "list",
+          "cachedResultName": "2nd-brain-v2"
+        },
+        "topK": 15,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        816
+      ],
+      "id": "83f141ed-d5c2-493d-994d-f4fbd3e64f2f",
+      "name": "Search Qdrant1",
+      "credentials": {
+        "qdrantApi": {
+          "id": "fEqFttM9TjP3QlZJ",
+          "name": "QdrantApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "=No relevant points found, can I help you with anything else or do you want me to try again?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        -128
+      ],
+      "id": "1065d360-5d99-4a05-a844-3f982ae4715e",
+      "name": "No points found",
+      "webhookId": "243c58b3-2c70-4d15-aceb-920dda210426"
+    },
+    {
+      "parameters": {
+        "message": "=No relevant points found, can I help you with anything else or do you want me to try again?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        1504,
+        720
+      ],
+      "id": "7f0fc02e-bc96-472d-b0ac-802e884ab255",
+      "name": "No points found1",
+      "webhookId": "243c58b3-2c70-4d15-aceb-920dda210426"
+    },
+    {
+      "parameters": {
+        "message": "=Just updated the entry. Want me to help you with anything else?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        2656,
+        608
+      ],
+      "id": "3736e373-7da3-40e7-a118-3a58b2f32b82",
+      "name": "Point updated",
+      "webhookId": "243c58b3-2c70-4d15-aceb-920dda210426"
+    },
+    {
+      "parameters": {
+        "message": "=Just added a new entry. Want me to help you with anything else?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [
+        2784,
+        1408
+      ],
+      "id": "a096a9ce-38dc-4b83-a0e4-20384d03e167",
+      "name": "Point created",
+      "webhookId": "243c58b3-2c70-4d15-aceb-920dda210426"
+    }
+  ],
+  "connections": {
+    "Chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answerable validator",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answerable validator": {
+      "main": [
+        [
+          {
+            "node": "If valid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask user to refine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If valid": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask user to refine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answerable validator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat3": {
+      "main": [
+        [
+          {
+            "node": "Is approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is approved": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Call SUB: Refine input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Read",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find point",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call SUB: classify message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read": {
+      "main": [
+        [
+          {
+            "node": "Answer the question the user asked",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No points found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Read",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Search Qdrant",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Clean output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call SUB: classify message": {
+      "main": [
+        [
+          {
+            "node": "Chat3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store points",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Store points",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Find point",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Search Qdrant1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Find point",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set sessionId": {
+      "main": [
+        [
+          {
+            "node": "Answerable validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Output": {
+      "main": [
+        [
+          {
+            "node": "Chat4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Find point": {
+      "main": [
+        [
+          {
+            "node": "Format Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No points found1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat4": {
+      "main": [
+        [
+          {
+            "node": "Is approved1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is approved1": {
+      "main": [
+        [
+          {
+            "node": "Ask for more details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Refine existing point",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Update Point Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Point Payload": {
+      "main": [
+        [
+          {
+            "node": "Point updated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean output": {
+      "main": [
+        [
+          {
+            "node": "Store points",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store points": {
+      "main": [
+        [
+          {
+            "node": "Point created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start chat": {
+      "main": [
+        [
+          {
+            "node": "Set sessionId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call SUB: Refine input": {
+      "main": [
+        [
+          {
+            "node": "Chat3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Chat memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Find point",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refine existing point": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Ask user to refine": {
+      "main": [
+        [
+          {
+            "node": "Answerable validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Answerable validator",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "Read",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Qdrant": {
+      "ai_tool": [
+        [
+          {
+            "node": "Read",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Qdrant1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Find point",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "nodeGroups": [
+    {
+      "id": "7881e1e7-12f6-4b9d-bf74-18061e9e1b54",
+      "nodeIds": [
+        "710fc495-8a3b-4daf-b36b-19964e6b0ee9",
+        "73a77c9c-ff15-48eb-8606-820f4552d6cf",
+        "9bc19b04-f96c-49f5-9eef-e584b3beeb6f",
+        "9096556d-62e7-4fd5-bf42-7be90a44af94",
+        "435eec83-2eb9-479d-87bf-c4ce8e81ca99",
+        "1b5ca6bc-e35e-4787-97f6-36624ab53811",
+        "1065d360-5d99-4a05-a844-3f982ae4715e"
+      ],
+      "name": "Read"
+    },
+    {
+      "id": "26c236e3-a21f-469a-919d-a7b397ba876c",
+      "nodeIds": [
+        "4ffde21a-b933-4d82-a4ca-e2368f9ffcb2",
+        "f55c0cd5-7bed-417f-a909-5370c1552c32",
+        "0e9e4348-5127-4f6e-aa46-db27cdce8316",
+        "3fb6a25e-0c51-47b9-b8a7-3768b3fd8685",
+        "d58cb16d-f342-423d-88bd-12c02e161694",
+        "eb8accad-be1c-4ee6-887b-931a410408e7",
+        "d4384d44-c8ae-472e-bcb3-442ef13b04fd",
+        "0e17fdf4-ad3f-414d-96ad-57b832893a2f",
+        "03a2f186-85db-4ba4-9915-2844f9a73223",
+        "73f2b363-0b1d-4e41-8789-4b74791cba50",
+        "bf645c25-7cb2-46ac-961c-4a0293183ad6",
+        "a3177fb0-5b3a-4877-bbad-782ed71d0a43",
+        "5f38ce1f-0149-4cf4-8346-ae34175caf07",
+        "83f141ed-d5c2-493d-994d-f4fbd3e64f2f",
+        "7f0fc02e-bc96-472d-b0ac-802e884ab255",
+        "3736e373-7da3-40e7-a118-3a58b2f32b82"
+      ],
+      "name": "Update"
+    },
+    {
+      "id": "5430f738-eb1b-46ea-9641-bf45878157bc",
+      "nodeIds": [
+        "5f026bb2-c11c-47f8-b19b-bade804c3077",
+        "7d486e60-41ab-4123-9808-3330014e0844",
+        "027f9c19-5e1d-472f-9c39-d2a6056ceec8",
+        "d52b7753-2809-4e21-8690-8349e3668d55",
+        "baadf8ae-ddff-4ed0-8c7c-41bd507f4317",
+        "87803bf9-f163-490a-a331-e2dd5ce651cf",
+        "261b4355-5fbc-4bb9-b28f-f696fe843324",
+        "a219c642-7cc3-4298-8da8-cf3b9a88a3b9",
+        "6dc8edb5-b1de-4282-8f1c-d18e0cabd6ab",
+        "3dca9c7a-386e-41c2-bc45-ea18192b0bb5",
+        "daec4e8a-4535-4e20-b8c5-47fd6289ee79",
+        "a096a9ce-38dc-4b83-a0e4-20384d03e167"
+      ],
+      "name": "Create"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2b9d003b52b079e6739b2851e504c70b231790988b40dada87c7658bfc9eb9e"
+  }
+}
