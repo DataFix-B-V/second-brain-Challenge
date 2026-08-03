@@ -1,0 +1,153 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "OpenVINO/Qwen3-14B-int4-ov",
+          "mode": "list",
+          "cachedResultName": "OpenVINO/Qwen3-14B-int4-ov"
+        },
+        "builtInTools": {},
+        "options": {
+          "frequencyPenalty": 0,
+          "maxTokens": -1,
+          "presencePenalty": 0,
+          "temperature": 0,
+          "timeout": 60000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        304,
+        464
+      ],
+      "id": "3f29163e-c978-4112-86ff-bbf56a644b44",
+      "name": "Chat",
+      "credentials": {
+        "openAiApi": {
+          "id": "WSdKlVS8bA4xz1ak",
+          "name": "Intel ARC"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"contacts\": [\"Wesley\"]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        256
+      ],
+      "id": "f1ce4dfa-c180-4256-b9e7-3da34cf8b997",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        32
+      ],
+      "id": "a5ac3db5-f3df-4590-9c7d-c489a8e072cb",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are an agent that is tasked with extracting the names that the user is talking about in an array. If no contact are found, return an empty array.\n\n/no_think"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        304,
+        32
+      ],
+      "id": "af02451c-f9ef-48ac-9ddf-8d5d8a34bfef",
+      "name": "Determine contacts",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\t\"output\": {\n      \"contacts\": [\"\"]\n    }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        48
+      ],
+      "id": "1ff608db-567e-43c9-a754-f1301f84cae5",
+      "name": "Failsafe: set empty contacts"
+    }
+  ],
+  "connections": {
+    "Chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Determine contacts",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Determine contacts",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Determine contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine contacts": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Failsafe: set empty contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "a2b9d003b52b079e6739b2851e504c70b231790988b40dada87c7658bfc9eb9e"
+  }
+}
