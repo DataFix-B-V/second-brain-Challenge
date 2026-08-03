@@ -1,0 +1,132 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "5f8e38e5-4e5b-4de5-b864-bc02d8ff2c98",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        1600,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "OpenVINO/Qwen3-14B-int4-ov",
+          "mode": "list",
+          "cachedResultName": "OpenVINO/Qwen3-14B-int4-ov"
+        },
+        "builtInTools": {},
+        "options": {
+          "frequencyPenalty": 0,
+          "maxTokens": -1,
+          "presencePenalty": 0,
+          "temperature": 0,
+          "timeout": 60000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1808,
+        1488
+      ],
+      "id": "0379a11e-3718-4c51-8e6c-fc71191bc65b",
+      "name": "Chat",
+      "credentials": {
+        "openAiApi": {
+          "id": "WSdKlVS8bA4xz1ak",
+          "name": "Intel ARC"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"content\": \"I had a Microsoft Teams meeting with Sander at around 9 AM today to discuss the current progress of the ConvertFlow project.\",\n  \"datetime\": \"2026-07-31T09:00:00+02:00\",\n  \"interactionType\": \"online\",\n  \"interactionDetails\": \"Microsoft Teams\",\n  \"project\": \"ConvertFlow\",\n  \"category\": \"work\",\n  \"subcategory\": \"meetings\",\n  \"reminderDatetime\": \"\",\n  \"reminderActions\": \"\",\n  \"contacts\": [\n    \"Sander\"\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1872,
+        1328
+      ],
+      "id": "82a7f9c5-cf24-4920-ad93-557e85e576e3",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Apply the following refinement:\n{{ $json.chatInput || $json.update }}\n\nOn the following data\n{{ $json.output.toJsonString() }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You refine one existing second-brain memory.\n\nThe user message contains:\n\n1. An existing memory object, usually in this structure:\n\n[\n{\n\"output\": {\n\"content\": \"\",\n\"datetime\": \"\",\n\"interactionType\": \"\",\n\"interactionDetails\": \"\",\n\"project\": \"\",\n\"category\": \"\",\n\"subcategory\": \"\",\n\"reminderDatetime\": \"\",\n\"reminderActions\": \"\",\n\"contacts\": []\n}\n}\n]\n\n2. A plain-text refinement describing a correction or addition.\n\nUse the pasted object as the base. Apply the refinement carefully and return the complete updated object in exactly the same structure.\n\n## Main rule\n\nChange only fields directly affected by the refinement.\n\nPreserve every unrelated field exactly as received.\n\nDo not broadly rewrite, reclassify, or replace the memory.\n\nDo not invent information.\n\n## Content\n\n`content` must remain a complete description of the original memory.\n\nNever replace `content` with only the refinement text.\n\nStart with the original `content` and incorporate the refinement into it.\n\nThe updated `content` must:\n\n* preserve all original information that was not corrected;\n* add information introduced by the refinement;\n* remove information explicitly rejected by the refinement;\n* remain one coherent description of the complete memory;\n* not include explanations about the correction.\n\nExample:\n\nOriginal content:\n\n`Had a meeting with Person B from Company X about convertFlow.`\n\nRefinement:\n\n`It was with Person A and not Person B.`\n\nUpdated content:\n\n`Had a meeting with Person A from Company X about convertFlow.`\n\nDo not return:\n\n`It was with Person A and not Person B.`\n\n## Names and contacts\n\nUse `contacts` as the list of people involved.\n\nFor an addition:\n\n`The meeting was also with Person A.`\n\n* preserve existing contacts;\n* add `Person A`;\n* avoid duplicates;\n* update `content` to include Person A.\n\nFor a replacement:\n\n`It was with Person A and not Person B.`\n\n* remove `Person B` from `contacts`;\n* add `Person A`;\n* replace Person B with Person A in `content`;\n* preserve all other details.\n\nFor a removal:\n\n`Person A was not there.`\n\n* remove Person A from `contacts`;\n* remove Person A from `content`;\n* preserve all remaining participants.\n\nDo not change the project, date, category, or other fields unless the refinement explicitly affects them.\n\n## Date and time\n\nWhen the refinement changes the event time, update only:\n\n* `datetime`;\n* the time mentioned in `content`;\n* reminder fields only when the refinement explicitly concerns a reminder.\n\nExample:\n\nOriginal datetime:\n\n`2023-10-25T14:30:00Z`\n\nRefinement:\n\n`The meeting was 15 minutes earlier.`\n\nUpdated datetime:\n\n`2023-10-25T14:15:00Z`\n\nPreserve the timezone and all unrelated fields.\n\nWhen the calculation crosses midnight, update the date accordingly.\n\nWhen today is given, that is {{ $now }}.\n\n## Project\n\nWhen the refinement corrects the project:\n\n* update `project`;\n* update the project reference in `content`;\n* preserve unrelated fields.\n\nExample:\n\n`The project was convertFlow, not Unknown Project.`\n\n## Categories\n\nChange `category`, `subcategory` only when the refinement explicitly changes the meaning or type of the memory.\n\n## Interaction type and details\n\n`interactionType` describes whether the interaction occurred:\n\n* `online`\n* `in_person`\n\nDo not use `interactionType` for corrections, meetings, reminders, categories, or other interaction meanings.\n\nFor online interactions:\n\n* set `interactionType` to `online`;\n* set `interactionDetails` to the communication medium.\n\nExamples:\n\n* `Microsoft Teams`\n* `Zoom`\n* `Google Meet`\n* `phone`\n* `email`\n* `WhatsApp`\n* `Slack`\n\nFor in-person interactions:\n\n* set `interactionType` to `in_person`;\n* set `interactionDetails` to the location when a location is provided;\n* otherwise, set `interactionDetails` to an empty string.\n\nExamples:\n\n* `at the Company X office` → `interactionType: \"in_person\"`, `interactionDetails: \"Company X office\"`\n* `via Microsoft Teams` → `interactionType: \"online\"`, `interactionDetails: \"Microsoft Teams\"`\n\nOnly change these fields when the refinement affects whether the interaction was online or in person, its communication medium, or its physical location.\n\n\nIt should describe the actual memory, not the editing operation.\n\n## Reminders\n\nChange `reminderDatetime` or `reminderActions` only when the refinement concerns a reminder.\n\nDo not turn an event into a reminder unless the user explicitly requests that.\n\n## Output\n\nReturn exactly:\n\n[\n{\n\"output\": {\n\"content\": \"\",\n\"datetime\": \"\",\n\"interactionType\": \"\",\n\"interactionDetails\": \"\",\n\"project\": \"\",\n\"category\": \"\",\n\"subcategory\": \"\",\n\"reminderDatetime\": \"\",\n\"reminderActions\": \"\",\n\"contacts\": [],\n}\n}\n]\n\nRules:\n\n* Return the complete object.\n* Preserve the array and `output` wrapper.\n* Preserve all unaffected values exactly.\n* Use strings for all fields except `contacts`.\n* `contacts` must always be an array of strings.\n* Never return null.\n* Do not add fields other than `follow_up_question`.\n* Return valid JSON only.\n* Do not return Markdown, reasoning, explanations, or text outside the JSON.\n\n/no_think\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1808,
+        1136
+      ],
+      "id": "27fed792-c9c8-4304-b6e2-43e8773daee5",
+      "name": "Refinement agent"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Refinement agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Refinement agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Refinement agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refinement agent": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "a2b9d003b52b079e6739b2851e504c70b231790988b40dada87c7658bfc9eb9e"
+  }
+}
