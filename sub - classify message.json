@@ -1,0 +1,355 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Mb0YNkDveG6M9Eb7",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Mb0YNkDveG6M9Eb7",
+          "cachedResultName": "LLM — SUB: find timestamp"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        -352
+      ],
+      "id": "d9be7cad-263d-4289-9a30-40f007d83f4d",
+      "name": "Call 'SUB: find timestamp'"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d419c5ba-12b1-44ab-a3b7-3fe19d367a40",
+              "name": "chatInput",
+              "value": "={{ $json.output_message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        912,
+        -64
+      ],
+      "id": "b4f2e532-d928-4072-bc72-d81182b16e8c",
+      "name": "Set message"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "8ACuRVChnvJtJbrG",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/8ACuRVChnvJtJbrG",
+          "cachedResultName": "LLM — SUB: find location"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        -160
+      ],
+      "id": "37c4c738-f1cb-4527-a40d-3cdb06992cb6",
+      "name": "Call 'SUB: find location'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "KtjjYGOYW9kU8XJd",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/KtjjYGOYW9kU8XJd",
+          "cachedResultName": "LLM — SUB: find project & category"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        32
+      ],
+      "id": "049aef04-81cc-4c0e-8c42-43148f9c4445",
+      "name": "Call 'SUB: find project & category'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "KXPlZ4jD5cd3M4PX",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/KXPlZ4jD5cd3M4PX",
+          "cachedResultName": "LLM — SUB: find reminders & actions"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        224
+      ],
+      "id": "aded0825-38f8-470f-8985-f30928b10bf3",
+      "name": "Call 'SUB: find reminders & actions'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "xaAk8wwBJBOmAbZZ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/xaAk8wwBJBOmAbZZ",
+          "cachedResultName": "LLM — SUB: find contact"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        416
+      ],
+      "id": "b0d1e9cd-3609-4c4a-8183-4ffd61774a9f",
+      "name": "Call 'SUB: find contact'"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 6,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1456,
+        -128
+      ],
+      "id": "3ee3e2a8-1635-4af1-ae56-3cf9bd9c8d0b",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jOJEGHW9rLthZQvj",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/jOJEGHW9rLthZQvj",
+          "cachedResultName": "LLM — SUB: find content"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        -544
+      ],
+      "id": "6a47760b-4ad1-4a5d-a9b5-8f7735c95a49",
+      "name": "Call 'SUB: find content'"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "output_message",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "id": "38b21d76-e2f7-4067-8f17-197930baab2a",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        704,
+        -64
+      ]
+    }
+  ],
+  "connections": {
+    "Call 'SUB: find timestamp'": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set message": {
+      "main": [
+        [
+          {
+            "node": "Call 'SUB: find timestamp'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'SUB: find location'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'SUB: find project & category'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'SUB: find reminders & actions'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'SUB: find contact'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'SUB: find content'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'SUB: find location'": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Call 'SUB: find project & category'": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Call 'SUB: find reminders & actions'": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Call 'SUB: find contact'": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        []
+      ]
+    },
+    "Call 'SUB: find content'": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "a2b9d003b52b079e6739b2851e504c70b231790988b40dada87c7658bfc9eb9e"
+  }
+}
