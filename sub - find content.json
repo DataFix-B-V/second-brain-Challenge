@@ -148,13 +148,7 @@
       ]
     }
   },
-  "pinData": {
-    "Start": [
-      {
-        "chatInput": "Earlier today, at roughly nine in the morning, I had a Microsoft Teams meeting with Bram about the current progress of the ConvertFlow project."
-      }
-    ]
-  },
+  "pinData": {},
   "meta": {
     "instanceId": "a2b9d003b52b079e6739b2851e504c70b231790988b40dada87c7658bfc9eb9e"
   }
